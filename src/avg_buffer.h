@@ -1,5 +1,5 @@
-#ifndef AVG_BUFFER_H_
-#define AVG_BUFFER_H_
+#ifndef BLINKENLIGHTS_CONTROLLER_SRC_AVG_BUFFER_H_
+#define BLINKENLIGHTS_CONTROLLER_SRC_AVG_BUFFER_H_
 
 #include "board.h"
 
@@ -18,4 +18,4 @@ void init_buffer(volatile MyBuffer*);
 //void put_val(uint32_t, int32_t);
 int32_t get_avg(volatile MyBuffer*, int32_t);
 
-#endif /* AVG_BUFFER_H_ */
+#endif /* BLINKENLIGHTS_CONTROLLER_SRC_AVG_BUFFER_H_ */

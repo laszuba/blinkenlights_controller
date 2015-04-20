@@ -1,5 +1,5 @@
-#ifndef POWER_AVG_H_
-#define POWER_AVG_H_
+#ifndef BLINKENLIGHTS_CONTROLLER_SRC_POWER_AVG_H_
+#define BLINKENLIGHTS_CONTROLLER_SRC_POWER_AVG_H_
 
 #include "board.h"
 
@@ -15,4 +15,4 @@ void init_pwr_buffer(MyPwrBuffer*);
 void put_pwr_val(MyPwrBuffer*,int32_t);
 int32_t get_pwr_avg(MyPwrBuffer*);
 
-#endif /* POWER_AVG_H_ */
+#endif /* BLINKENLIGHTS_CONTROLLER_SRC_POWER_AVG_H_ */

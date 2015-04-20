@@ -1,5 +1,5 @@
-#ifndef PID_H_
-#define PID_H_
+#ifndef BLINKENLIGHTS_CONTROLLER_SRC_PID_H_
+#define BLINKENLIGHTS_CONTROLLER_SRC_PID_H_
 
 #include "lpc_types.h"
 
@@ -35,4 +35,4 @@ int pid_calc(MyPid*,PID_T);
 void pid_set_target(MyPid*,PID_T);
 
 
-#endif /* PID_H_ */
+#endif /* BLINKENLIGHTS_CONTROLLER_SRC_PID_H_ */

@@ -1,5 +1,5 @@
-#ifndef INIT_H_
-#define INIT_H_
+#ifndef BLINKENLIGHTS_CONTROLLER_SRC_INIT_H_
+#define BLINKENLIGHTS_CONTROLLER_SRC_INIT_H_
 
 #include "board.h"
 #include "avg_buffer.h"
@@ -81,4 +81,4 @@ volatile MyBuffer bufferB;
 						DMA_XFERCFG_DSTINC_1 | \
 						DMA_XFERCFG_XFERCOUNT(DMA_BUFFER_SIZE))
 
-#endif /* INIT_H_ */
+#endif /* BLINKENLIGHTS_CONTROLLER_SRC_INIT_H_ */

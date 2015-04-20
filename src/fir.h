@@ -1,5 +1,5 @@
-#ifndef FIR_H_
-#define FIR_H_
+#ifndef BLINKENLIGHTS_CONTROLLER_SRC_FIR_H_
+#define BLINKENLIGHTS_CONTROLLER_SRC_FIR_H_
 
 #include "board.h"
 
@@ -40,4 +40,4 @@ void FirFilter_init(MyFilter* f);
 void FirFilter_put(MyFilter* f, int32_t input);
 int32_t FirFilter_get(MyFilter* f);
 
-#endif /* FIR_H_ */
+#endif /* BLINKENLIGHTS_CONTROLLER_SRC_FIR_H_ */
