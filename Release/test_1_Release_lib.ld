@@ -4,7 +4,7 @@
  * (c) NXP Semiconductors 2013-2015
  * Generated linker script file for LPC824
  * Created from LibIncTemplate.ld (LPCXpresso v7.6 (2 [Build 326] [2015-02-02] ))
- * By LPCXpresso v7.6.2 [Build 326] [2015-02-02]  on Sat Feb 28 19:45:00 EST 2015
+ * By LPCXpresso v7.6.2 [Build 326] [2015-02-02]  on Sun Apr 19 01:34:39 EDT 2015
  */
 
 

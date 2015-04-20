@@ -1,4 +1,4 @@
-src/test_1.o src/test_1.d: ../src/test_1.c \
+src/init.o src/init.d: ../src/init.c ../src/init.h \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_board_nxp_lpcxpresso_824/inc/board.h \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_chip_82x/inc/chip.h \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_chip_82x/inc/lpc_types.h \
@@ -42,8 +42,9 @@ src/test_1.o src/test_1.d: ../src/test_1.c \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_chip_82x/inc/inmux_8xx.h \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_board_nxp_lpcxpresso_824/inc/board_api.h \
  /Users/lszuba/dev/LPCXpresso/workspace/lpc_chip_82x/inc/lpc_types.h \
- ../src/fir.h ../src/avg_buffer.h ../src/power_avg.h ../src/pid.h \
- ../src/init.h
+ ../src/avg_buffer.h
+
+../src/init.h:
 
 /Users/lszuba/dev/LPCXpresso/workspace/lpc_board_nxp_lpcxpresso_824/inc/board.h:
 
@@ -131,12 +132,4 @@ src/test_1.o src/test_1.d: ../src/test_1.c \
 
 /Users/lszuba/dev/LPCXpresso/workspace/lpc_chip_82x/inc/lpc_types.h:
 
-../src/fir.h:
-
 ../src/avg_buffer.h:
-
-../src/power_avg.h:
-
-../src/pid.h:
-
-../src/init.h:

@@ -176,6 +176,9 @@ void init() {
 	SystemCoreClockUpdate();
 	Board_Init();
 
+	// Sets up DEBUG UART
+	DEBUGINIT();
+
 	// Enable the clock to the Switch Matrix
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_SWM);
 

@@ -40,7 +40,7 @@
 
 #define UART_TEST_DEFAULT_BAUDRATE 115200
 
-#define HEADER 0xAA
+#define HEADER 0xFF
 
 // Ring buffer size
 #define UART_RB_SIZE 64
@@ -57,8 +57,6 @@ static volatile int bufferComplete = BUFFER_B;
 
 static MyFilter firFilter;
 static MyPwrBuffer powerBuffer;
-
-static MyPid powerPid;
 
 const char inst1[] = "Open OSC Test\r\n";
 
@@ -141,9 +139,6 @@ void loop() {
 	static int32_t gain = INIT_GAIN;
 	static int32_t accumDutyCycle;
 	static unsigned int sampleCount = 0;
-	static unsigned int colourCount = 0;
-	static unsigned int myColour = WHITE;
-	static unsigned int colourTime = 0;
 
 	static rx_packet_t rx_packet;
 
@@ -268,14 +263,24 @@ static void process_input(rx_packet_t * rx_packet) {
 	uart_state_t next_state;
 
 	uint8_t input;
-	// Grab the next character from the debug UART
-	int bytes = Chip_UART_ReadRB(LPC_USART, &rxring, &input, 1);
+	int bytes;
 
 	//Chip_UART_SendBlocking(LPC_USART, &debug_msg, sizeof(debug_msg) - 1);
 	//Chip_UART_SendBlocking(LPC_USART, &input, 1);
 
-	// If there is nothing new to process, just return
-	if (bytes != 0) {
+	if (state != WAIT) {
+		Board_LED_Set(1, TRUE);
+	} else {
+		Board_LED_Set(1, FALSE);
+	}
+
+	// Run until entire buffer has been processed
+	while (TRUE) {
+		// Grab the next character from the debug UART
+		bytes = Chip_UART_ReadRB(LPC_USART, &rxring, &input, 1);
+		// If there is nothing new to process, just return
+		if (bytes == 0) break;
+
 		next_state = WAIT;
 		switch(state) {
 			case WAIT:
@@ -283,23 +288,25 @@ static void process_input(rx_packet_t * rx_packet) {
 				// See if the input is a header
 				if (HEADER == input) {
 					rx_packet->valid = FALSE;
-					next_state = GET_HDR2;
-				}
-				break;
-			case GET_HDR2:
-				if (HEADER == input) {
 					next_state = GET_ADDR;
 				}
+				break;
 			case GET_ADDR:
 				//Chip_UART_SendBlocking(LPC_USART, &get_addr_msg, sizeof(get_addr_msg) - 1);
-				if (MY_ADDR == input) {
+				if (HEADER == input) {
+					rx_packet->valid = FALSE;
+					next_state = GET_ADDR;
+				} else if (MY_ADDR == input) {
 					rx_packet->addr = input;
 					next_state = GET_OUT_ADDR;
 				}
 				break;
 			case GET_OUT_ADDR:
 				//Chip_UART_SendBlocking(LPC_USART, &get_out_addr_msg, sizeof(get_out_addr_msg) - 1);
-				if ((input <= NUM_OUTPUTS) && (input > 0)) {
+				if (HEADER == input) {
+					rx_packet->valid = FALSE;
+					next_state = GET_ADDR;
+				} else if ((input <= NUM_OUTPUTS) && (input > 0)) {
 					rx_packet->out_addr = input;
 					next_state = GET_CMD;
 				}
@@ -307,24 +314,37 @@ static void process_input(rx_packet_t * rx_packet) {
 				break;
 			case GET_CMD:
 				//Chip_UART_SendBlocking(LPC_USART, &get_cmd_msg, sizeof(get_cmd_msg) - 1);
-				if (0 != input) {
+				if (HEADER == input) {
+					rx_packet->valid = FALSE;
+					next_state = GET_ADDR;
+				} else if (input != 0) {
 					rx_packet->cmd = (cmd_t)input;
 					next_state = GET_HDATA;
 				}
 				break;
 			case GET_HDATA:
 				//Chip_UART_SendBlocking(LPC_USART, &get_hdata_msg, sizeof(get_hdata_msg) - 1);
-				rx_packet->data = input << 8;
-				next_state = GET_LDATA;
+				if (HEADER == input) {
+					rx_packet->valid = FALSE;
+					next_state = GET_ADDR;
+				} else {
+					rx_packet->data = input << 8;
+					next_state = GET_LDATA;
+				}
 				break;
 			case GET_LDATA:
 				//Chip_UART_SendBlocking(LPC_USART, &get_ldata_msg, sizeof(get_ldata_msg) - 1);
+				// Here is the only place we don't want to check for a header
 				rx_packet->data = rx_packet->data | input;
 				next_state = GET_NEWLINE;
 				break;
 			case GET_NEWLINE:
-				if ('\n' == input) {
+				if (HEADER == input) {
+					rx_packet->valid = FALSE;
+					next_state = GET_ADDR;
+				} else if ('\n' == input) {
 					rx_packet->valid = TRUE;
+					next_state = WAIT;
 				}
 				break;
 			default:
@@ -432,29 +452,6 @@ void LPC_UARTHNDLR(void)
 	Chip_UART_RXIntHandlerRB(LPC_USART, &rxring);
 }
 
-#ifndef USE_DMA
-// Handle interrupt from ADC sequencer A
-void ADC_SEQA_IRQHandler(void)
-{
-	uint32_t pending;
-	// Get pending interrupts
-	pending = Chip_ADC_GetFlags(LPC_ADC);
-
-	// Toggle GPIO to see ADC rate
-	Chip_GPIO_SetPinOutLow(LPC_GPIO_PORT, 0, 0);
-
-	// Sequence A completion interrupt
-	if (pending & ADC_FLAGS_SEQA_INT_MASK) {
-		transferComplete = true;
-	}
-
-	Chip_GPIO_SetPinOutHigh(LPC_GPIO_PORT, 0, 0);
-
-	// Clear any pending ADC interrupts
-	Chip_ADC_ClearFlags(LPC_ADC, pending);
-}
-#endif
-
 void DMA_IRQHandler(void)
 {
 	Chip_GPIO_SetPinOutLow(LPC_GPIO_PORT, 0, 0);
@@ -469,17 +466,18 @@ void DMA_IRQHandler(void)
 		Chip_DMA_ClearErrorIntChannel(LPC_DMA, DMA_CH0);
 		Chip_DMA_EnableChannel(LPC_DMA, DMA_CH0);
 		//while(1); // Block on error
+	} else {
+		Chip_GPIO_SetPinOutHigh(LPC_GPIO_PORT, 0, 0);
+		if (bufferComplete == BUFFER_A) {
+			bufferComplete = BUFFER_B;
+		} else {
+			bufferComplete = BUFFER_A;
+		}
+		transferComplete = true;
 	}
 
 	// Clear DMA interrupt for the channel
 	Chip_DMA_ClearActiveIntAChannel(LPC_DMA, DMA_CH0);
-	Chip_GPIO_SetPinOutHigh(LPC_GPIO_PORT, 0, 0);
-	if (bufferComplete == BUFFER_A) {
-		bufferComplete = BUFFER_B;
-	} else {
-		bufferComplete = BUFFER_A;
-	}
-	transferComplete = true;
 }
 
 /*****************************************************************************
@@ -497,9 +495,6 @@ int main(void)
 	init_pwr_buffer(&powerBuffer);
 	FirFilter_init(&firFilter);
 
-	//pid_init(&powerPid, 10000, 0, 0, 1<<16, -(1<<16));
-	//pid_set_target(&powerPid, TARGET_POWER);
-
 	init();
 
 	print_device();
@@ -507,8 +502,22 @@ int main(void)
 	// Enable the clock to the Switch Matrix
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_SWM);
 
+#ifdef USE_EXT_UART
+	// Leave the debug port as is
 	Chip_SWM_MovablePinAssign(SWM_U0_TXD_O, 4);
 	Chip_SWM_MovablePinAssign(SWM_U0_RXD_I, 0);
+#else
+	// Connect to the usb modem UART
+	// NOTE: must disconnect the UART used for DEBUG macros
+	Chip_SWM_DisableFixedPin(SWM_FIXED_ADC8);
+	Chip_SWM_DisableFixedPin(SWM_FIXED_ADC9);
+
+	//Chip_SWM_MovablePinAssign(SWM_U1_TXD_O, 4);
+	//Chip_SWM_MovablePinAssign(SWM_U1_RXD_I, 0);
+
+	Chip_SWM_MovablePinAssign(SWM_U0_TXD_O, 7);
+	Chip_SWM_MovablePinAssign(SWM_U0_RXD_I, 18);
+#endif
 
 	// Disable the clock to the Switch Matrix to save power
 	Chip_Clock_DisablePeriphClock(SYSCTL_CLOCK_SWM);

@@ -8,7 +8,10 @@ C_SRCS += \
 ../src/cr_startup_lpc82x.c \
 ../src/crp.c \
 ../src/fir.c \
+../src/init.c \
 ../src/mtb.c \
+../src/pid.c \
+../src/power_avg.c \
 ../src/sysinit.c \
 ../src/test_1.c 
 
@@ -21,7 +24,10 @@ OBJS += \
 ./src/cr_startup_lpc82x.o \
 ./src/crp.o \
 ./src/fir.o \
+./src/init.o \
 ./src/mtb.o \
+./src/pid.o \
+./src/power_avg.o \
 ./src/sysinit.o \
 ./src/test_1.o 
 
@@ -30,7 +36,10 @@ C_DEPS += \
 ./src/cr_startup_lpc82x.d \
 ./src/crp.d \
 ./src/fir.d \
+./src/init.d \
 ./src/mtb.d \
+./src/pid.d \
+./src/power_avg.d \
 ./src/sysinit.d \
 ./src/test_1.d 
 
